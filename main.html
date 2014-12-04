@@ -1,0 +1,209 @@
+<!DOCTYPE>
+<html>
+<head>
+<style type='text/css'>
+
+body{
+  padding:0px;
+  margin:0px;
+  font-family:arial;
+  font-size:15px;
+}
+
+div.panel{
+  background:rgb(240,240,240);
+  display:inline-block;
+  float:left;
+  height:100%;
+  overflow:scroll;
+}
+div.title{
+  padding:16px 20px;
+  text-align:center;
+  font-size:18px;
+  background:rgb(203,78,78);
+  color:rgb(255,255,255);
+  border-bottom:1px solid rgb(153,28,28);
+}
+
+div.stages{
+  width:300px;
+}
+
+div.stages div.stage{
+  -webkit-border-radius:12px;
+  -moz-border-radius:   12px;
+  border-radius:        12px;
+  background:rgb(218,218,218);
+  margin:30px 10px;
+  overflow:hidden;
+  box-shadow:0px 0px 0px 3px rgb(240,240,240);
+}
+div.stages div.stage div{
+  padding:16px 20px;
+}
+div.stages div.stage div.continue{
+  -webkit-border-radius:12px;
+  -moz-border-radius:   12px;
+  border-radius:        12px;
+  border-bottom:2px solid rgb(104,162,95);
+  background:rgb(144,202,135);
+}
+div.stages div.stage div.continue:after{
+  content:' Continue';
+  float:right;
+  opacity:0.5;
+  line-height:28px;
+}
+div.stages div.stage div.stop:after{
+  content:' Are Voted Off';
+  float:right;
+  opacity:0.5
+}
+div.stages div.stage div.initial:after{
+  content:'Initial Amount';
+}
+div.stages div.stage div.winner:after{
+  line-height:normal;
+  content:'Winner(s)';
+}
+div.stages div.stage div.add{
+  text-align:center;
+  opacity:0.5;
+  cursor:pointer;
+}
+div.stages div.stage div.add:hover{
+  opacity:1;
+}
+div.stages div.stage input.number{
+  border: 1px solid transparent;
+  background: none;
+  padding: 4px 7px;
+  width:75px;
+  -webkit-border-radius: 2px;
+  -moz-border-radius:    2px;
+  border-radius:         2px;
+}
+div.stages.canedit div.stage:hover input.number,
+div.stages div.stage.forcehover input.number,
+div.stages div.stage input.number:focus{
+  border-color: rgb(0,160,0);
+  background: rgb(235, 255, 235);
+}
+
+div.lineframe{
+  position:relative;
+  z-index:0;
+}
+div.lineframe div.line{
+  position:absolute;
+  top:0px;
+  bottom:0px;
+  left:50%;
+  margin-left:-1px;
+  width:2px;
+  background:rgb(120,120,120);
+  z-index:-1;
+}
+
+</style>
+<meta charset='UTF-8' NAME='Author' CONTENT='Hunter Larco'/>
+<title>Voting Console</title>
+<link rel="stylesheet" type="text/css" href="/resources/CSS/resets.css"></link>
+</head>
+<body>
+
+
+<div class='stages panel canedit'>
+  <div class='title'>Voting Stages</div>
+  <div class='lineframe' id='stages'>
+    <div class='line'></div>
+    
+    <div class='stage forcehover'>
+      <div class='continue initial'>
+        <input class='number' placeholder='???'/>
+      </div>
+    </div>
+    
+    <div class='stage' id='newstage'>
+      <div class='add'>Add a Stage</div>
+    </div>
+    
+    <div class='stage'>
+      <div class='continue winner'>None</div>
+    </div>
+    
+  </div>
+</div>
+
+
+<script type='text/javascript'>(function(){
+  
+  window.onload = Init;
+  
+  var stages = [];
+  
+  function Init(){
+    BindNumberInputs();
+    BindStages();
+  }
+  
+  function BindStages(){
+    BindNewStageButton();
+  }
+  
+  function BindNewStageButton(){
+    var elem = document.getElementById('newstage');
+    elem.removeAttribute('id');
+    elem.addEventListener('click', AddStage);
+  }
+  function AddStage(event){
+    var div = document.createElement('div');
+    div.setAttribute('class', 'stage forcehover');
+    var cont = document.createElement('div');
+    cont.setAttribute('class', 'continue');
+    var stp = document.createElement('div');
+    stp.setAttribute('class', 'stop');
+    stp.innerHTML = '???';
+    var input = document.createElement('input');
+    input.setAttribute('class', 'number');
+    input.setAttribute('placeholder', '???');
+    BindNumberInput(input);
+    input.addEventListener('keyup', UpdateStageCounters);
+    cont.appendChild(input);
+    div.appendChild(cont);
+    div.appendChild(stp);
+    this.parentNode.insertBefore(div, this);
+    stages.push({
+      'stage': div,
+      'input': input,
+      'stop': stp
+    })
+  }
+  
+  function UpdateStageCounters(event){
+    console.log(this.value);
+  }
+  
+  function BindNumberInputs(){
+    var elems = document.getElementsByClassName('number');
+    for(var i=0,elem; elem=elems[i++];) BindNumberInput(elem);
+  }
+  function BindNumberInput(elem){
+    elem.addEventListener('keyup', NumberInputKeyListener);
+    elem.addEventListener('blur', NumberInputBlurListener);
+  }
+  function NumberInputKeyListener(event){
+    this.value = this.value.replace(/\D/g, '');
+  }
+  function NumberInputBlurListener(event){
+    var min = parseInt(this.getAttribute('min')) || -Infinity,
+        max = parseInt(this.getAttribute('max')) ||  Infinity,
+        val = parseInt(this.value);
+    if(val == NaN) return;
+    this.value = Math.min(max, Math.max(val, min));
+  }
+  
+})();</script>
+</body>
+</html>
