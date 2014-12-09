@@ -14,6 +14,29 @@ class Game(ndb.Model):
   
   """
   ' PURPOSE
+  '   Returns whether the game is over
+  ' PARAMETERS
+  '   None
+  ' RETURNS
+  '   bool
+  """
+  def hasWinner(self):
+    return self.currentround == len(self.roundmap)
+  
+  """
+  ' PURPOSE
+  '   Returns all the winners if and only if the game is over.
+  '   If the game isn't over None is returned
+  ' PARAMETERS
+  '   None
+  ' RETURNS
+  '   dict ~ See self.getResults for details
+  """
+  def getWinners(self):
+    return self.getResults() if self.hasWinner() else None
+  
+  """
+  ' PURPOSE
   '   Changes game data to reflect the next round, saving all contestant
   '   stats and removing those who are no longer in the game.
   ' PARAMETERS
@@ -53,7 +76,7 @@ class Game(ndb.Model):
   '      randomly.
   """
   def updateResults(self, keep_duplicates=True):
-    arr = self.results[self.currentround].items()
+    arr = self.getResults().items()
     sorter_arr = sorted(arr, key=lambda x: x[1], reverse=True)
     keep_num = self.roundmap[self.currentround]
     keeps = sorter_arr[:keep_num]
@@ -68,12 +91,12 @@ class Game(ndb.Model):
       keeps += dupes;
     elif len(dupes) > 0:
       from random import random
-      while keeps[-1][1] == dupes[0][1]:
+      while len(keeps) != 0 and keeps[-1][1] == dupes[0][1]:
         dupes.append(keeps.pop())
       while len(keeps) != keep_num:
         keeps.append(dupes.pop(int(random()*len(dupes))))
     
-    self.results.append(dict([(contestant[0], 0) for contestant in keeps]))
+    self.results.append([contestant[0] for contestant in keeps])
   
   """
   ' PURPOSE
@@ -84,10 +107,13 @@ class Game(ndb.Model):
   ' RETURNS
   '   The voting dict for the specified round
   """
-  def getResults(self, num=None):
-    if not num:
-      num = self.currentround
-    return self.results[num]
+  def getResults(self, voteround=None):
+    if not voteround:
+      voteround = self.currentround
+    out = {}
+    for contestant in self.results[voteround]:
+      out[contestant] = self.GetVotes(contestant, voteround)
+    return out
   
   """
   ' PURPOSE
@@ -102,6 +128,8 @@ class Game(ndb.Model):
   '   1. see updatesResults for the 'keep_duplicates' explanation
   """
   def closeVoting(self, keep_duplicates=True):
+    if not self.voting or self.hasWinner():
+      return
     self.voting = False
     return self.nextRound(keep_duplicates=keep_duplicates)
   
@@ -114,34 +142,91 @@ class Game(ndb.Model):
   '   Nothing
   """
   def openVoting(self):
+    if self.voting or self.hasWinner():
+      return
     self.voting = True
     self.put()
   
   """
   ' PURPOSE
-  '   Votes for a contestant.
+  '   Votes for a contestant based on their name
   ' PAREMETERS
-  '   Contestant name
+  '   <str contestant>
   ' RETURNS
   '   Boolean
   '     True ~ The vote was cast
   '     False ~ Voting is closed or the contestant doesn't exist.
   """
   def vote(self, contestant):
-    if not self.voting:
+    if not self.voting or self.hasWinner():
       return False
     if not contestant in self.results[self.currentround]:
       return False
-    self.results[self.currentround][contestant] += 1
-    self.put()
+    self.IncrementVote(contestant)
     return True
+  
+  """
+  ' PURPOSE
+  '   Returns the amount of votes for a given contestant and voting round
+  '   If the voting round is None then it uses the most current
+  ' PARAMETERS
+  '   <str contestant>
+  '   <int **kwarg voteround>
+  ' RETURNS
+  '   int
+  """
+  def GetVotes(self, contestant, voteround=None):
+    counter = self.GetVoteCounter(contestant, voteround=voteround)
+    return counter.getValue()
+  
+  """
+  ' PURPOSE
+  '   Increments the vote in the current voting round for the specified
+  '   contestant.
+  ' PARAMETERS
+  '   <str contestant>
+  ' RETURNS
+  '   Nothing
+  """
+  def IncrementVote(self, contestant):
+    counter = self.GetVoteCounter(contestant)
+    counter.run('add', 1)
+  
+  """
+  ' PURPOSE
+  '   Returns the voting shard for the given contestant and voting round.
+  ' PARAMETERS
+  '   <str contestant>
+  '   <int **kwarg voteround>
+  ' RETURNS
+  '   <Integer extends shards.generic>
+  """
+  def GetVoteCounter(self, contestant, voteround=None):
+    if not voteround:
+      voteround = self.currentround
+    from shards import Integer
+    namespace = self.GenerateShardNamespace(voteround)
+    return Integer.getOrCreate(contestant, namespace)
+  
+  """
+  ' PURPOSE
+  '   Generates a shard namespace based on this game and given voteround.
+  ' PARAMETERS
+  '   <int voteround>
+  ' RETURNS
+  '   str
+  """
+  def GenerateShardNamespace(self, voteround):
+    string = 'Game<%s>Round<%s>' % (self.key.urlsafe(), voteround)
+    from hashlib import sha256
+    return sha256(string).hexdigest()
 
 
 """
 ' PURPOSE
 '   Creates a new game with the given contestants and voting procedure
 ' PARAMETERS
-'   <String[] contestants>
+'   <str[] contestants>
 '   <int[] roundmap>
 ' RETURNS
 '   <Game extends ndb.Model>
@@ -163,12 +248,25 @@ def create(contestants, roundmap):
     raise BaseException("Round map expects more players in a round than are present.")
   
   roundmap = sorted(list(set(roundmap)), reverse=True)
+  contestants = list(set(contestants))
   
   game = Game()
   game.roundmap = roundmap
   game.currentround = 0
   game.voting = False
-  game.results = [dict([(contestant, 0) for contestant in contestants])]
+  game.results = [contestants]
   game.put()
   return game
-  
+
+
+"""
+' PURPOSE
+'   Returns the game associated with the given identifier
+' PARAMETERS
+'   <str identifier>
+' RETURNS
+'   <Game extends ndb.Model>
+"""
+def get(identifier):
+  identifier = int(identifier)
+  return Game.get_by_id(identifier)
