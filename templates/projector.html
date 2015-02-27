@@ -1,0 +1,165 @@
+<!DOCTYPE>
+<html>
+<head>
+<style type='text/css'>
+
+body{
+  padding:0px;
+  margin:0px;
+  font-family:arial;
+  font-size:14px;
+}
+
+.red{
+  background:rgb(203,78,78);
+}
+.darkred{
+  background:rgb(178,53,53);
+}
+.blue{
+  background:rgb(80,160,157);
+}
+.darkblue{
+  background:rgb(55,135,132);
+}
+.green{
+  background:rgb(82,200,160);
+}
+.darkgreen{
+  background:rgb(57,175,135);
+}
+
+div.frame{
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 10px;
+  text-align:center;
+  font-size:30px;
+  margin:20px 30px;
+}
+
+h1{
+  padding:30px 0px;
+  margin:0px;
+  font-size:40px;
+  color:rgba(255,255,255,0.65);
+  font-weight:300;
+  text-align:center;
+}
+h2{
+  padding:30px 0px 6px 0px;
+  margin:0px;
+  font-size:20px;
+  color:rgb(51,51,51);
+  font-weight:700;
+  text-align:center;
+  line-height:32px;
+}
+
+div.contestants{
+  text-align:center;
+  padding:12px 0px;
+}
+div.contestants div.name{
+  color:rgb(255,255,255);
+  display:inline-block;
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 10px;
+  text-align:center;
+  font-size:20px;
+  margin:8px 8;
+  width:200px;
+}
+div.contestants div.name.gone{
+  opacity:0.35;
+}
+
+</style>
+
+<meta charset='UTF-8' NAME='Author' CONTENT='Hunter Larco'/>
+<meta name='format-detection' content='telephone=no'/>
+<meta name='msapplication-tap-highlight' content='no'/>
+<meta name='viewport' content='user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi'/>
+
+<title>Voting Console</title>
+
+<link rel='stylesheet' type='text/css' href='/resources/CSS/resets.css'></link>
+
+<script type='text/javascript' src='/resources/scripts/classie.js'></script>
+<script type='text/javascript' src='/resources/scripts/Request.js'></script>
+<script type='text/javascript' src='/resources/scripts/Cookies.js'></script>
+<script type="text/javascript" src="/_ah/channel/jsapi"></script>
+
+</head>
+<body>
+
+
+<div class='frame green'>
+  <h1>Mr AB Round <label id='roundnum'></label></h1>
+  <div class='contestants' id='list'></div>
+  <h2>Text 'Help Me' To (978) 800 0013 For Instructions<br/>Or Visit abrhs-mrab.appspot.com</h2>
+</div>
+
+
+<script type='text/javascript'>(function(){
+  
+  var results = {{results|safe}},
+      socket,
+      isvoting = {{isvoting|safe}};
+  
+  window.onload = Init;
+  
+  function Init(){
+    BindSocket();
+    Render();
+  }
+  
+  function BindSocket(){
+    var channel = new goog.appengine.Channel('{{socket}}');
+    socket = channel.open();
+    socket.onmessage = OnMessage;
+    socket.onerror = OnError;
+    socket.onclose = OnError;
+  }
+  function OnMessage(event){
+    var data = JSON.parse(event.data);
+    isvoting = data.event == 'open';
+    if(isvoting) return Render();
+    results.push(data.results);
+    Render();
+  }
+  function OnError(){
+    alert('The Socket Is Closed. Refresh the page. If that doesn\'t work, call Hunter Larco and panic.');
+  }
+  
+  function Render(){
+    document.getElementById('roundnum').innerHTML = results.length;
+    var list = document.getElementById('list');
+    list.innerHTML = '';
+    if(isvoting || results.length == 1){
+      for(var contestant in results[results.length-1])
+        list.appendChild(CreateElement('div', ['name', 'darkgreen'], contestant));
+    }else{
+      for(var contestant in results[results.length-2]){
+        var classes = ['name', 'darkgreen'], undefined;
+        if(results[results.length-1][contestant] == undefined) classes.push('gone');
+        list.appendChild(CreateElement('div', classes, contestant));
+      }
+    }
+  }
+  
+  function CreateElement(type, classes, html){
+    if(classes.constructor != Array) classes = [classes];
+    var elem = document.createElement(type);
+    for(var i=0,cls; cls=classes[i++];)
+      classie.add(elem, cls);
+    if(!!html) elem.innerHTML = html;
+    return elem;
+  }
+  
+})();</script>
+</body>
+</html>

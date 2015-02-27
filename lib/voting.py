@@ -11,6 +11,33 @@ class Game(ndb.Model):
   currentround = ndb.IntegerProperty()
   voting = ndb.BooleanProperty()
   results = ndb.PickleProperty()
+  datetime = ndb.DateTimeProperty(auto_now_add=True)
+  
+  """
+  ' PURPOSE
+  '   Returns a list of all initially competing contestants
+  ' PARAMETERS
+  '   None
+  ' RETURNS
+  '   list
+  """
+  def getContestants(self):
+    return self.getResults(0).keys()
+  
+  """
+  ' PURPOSE
+  '   Returns a list of all results for all rounds including the
+  '   most recent, even if incomplete.
+  ' PARAMETERS
+  '   None
+  ' RETURNS
+  '   list
+  """
+  def getAllResults(self):
+    results = []
+    for i in range(self.currentround+1):
+      results.append(self.getResults(i))
+    return results
   
   """
   ' PURPOSE
@@ -108,7 +135,7 @@ class Game(ndb.Model):
   '   The voting dict for the specified round
   """
   def getResults(self, voteround=None):
-    if not voteround:
+    if voteround == None:
       voteround = self.currentround
     out = {}
     for contestant in self.results[voteround]:
@@ -132,6 +159,17 @@ class Game(ndb.Model):
       return
     self.voting = False
     return self.nextRound(keep_duplicates=keep_duplicates)
+  
+  """
+  ' PURPOSE
+  '   Returns whether the voting system is open or closed
+  ' PARAMETERS
+  '   None
+  ' RETURNS
+  '   Nothing
+  """
+  def isVotingOpen(self):
+    return self.voting
   
   """
   ' PURPOSE
@@ -216,7 +254,9 @@ class Game(ndb.Model):
   ' RETURNS
   '   str
   """
-  def GenerateShardNamespace(self, voteround):
+  def GenerateShardNamespace(self, voteround=None):
+    if voteround == None:
+      voteround = self.currentround
     string = 'Game<%s>Round<%s>' % (self.key.urlsafe(), voteround)
     from hashlib import sha256
     return sha256(string).hexdigest()
@@ -270,3 +310,15 @@ def create(contestants, roundmap):
 def get(identifier):
   identifier = int(identifier)
   return Game.get_by_id(identifier)
+
+
+"""
+' PURPOSE
+'   Returns the most recently created game
+' PARAMETERS
+'   None
+' RETURNS
+'   <Game extends ndb.Model>
+"""
+def getCurrent():
+  return Game.query().order(-Game.datetime).get()

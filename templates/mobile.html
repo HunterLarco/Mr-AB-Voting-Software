@@ -1,0 +1,266 @@
+<!DOCTYPE>
+<html>
+<head>
+<style type='text/css'>
+
+body{
+  padding:0px;
+  margin:0px;
+  font-family:arial;
+  font-size:15px;
+}
+
+.blue{
+  background:rgb(80,160,157);
+}
+.red{
+  background:rgb(203,78,78);
+}
+
+h1{
+  padding:30px 40px;
+  margin:0px;
+  font-size:40px;
+  color:rgba(255,255,255,0.65);
+  font-weight:300;
+  text-align:center;
+}
+
+div.list{
+  padding:0px 20px 40px 20px;
+  color:rgb(245,245,245);
+}
+div.list div.item{
+  background:rgb(60,140,137);
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 10px;
+  text-align:center;
+  color:rgb(245,245,245);
+  font-size:20px;
+  margin:14px 0px;
+  display:none;
+}
+div.list div.closed{
+  background:rgba(255,255,255,0.15);
+  display:block;
+}
+div.list div.selected{
+  background:rgb(40,120,117);
+}
+body.canvote div.list div.item{
+  display:block;
+}
+body.canvote div.list div.closed{
+  display:none;
+}
+
+div.submitframe{
+  padding:20px 0px;
+  display:none;
+}
+div.submitframe div.submit{
+  background:rgb(178,53,53);
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 10px;
+  text-align:center;
+  color:rgb(245,245,245);
+  font-size:20px;
+  margin:20px;
+  border-bottom:3px solid rgb(158,33,33);
+}
+div.submitframe div.submit.active{
+  margin-top:22px;
+  border-bottom-width:1px;
+}
+body.canvote div.submitframe{
+  display:block;
+}
+
+</style>
+
+<meta charset='UTF-8' NAME='Author' CONTENT='Hunter Larco'/>
+<meta name='format-detection' content='telephone=no'/>
+<meta name='msapplication-tap-highlight' content='no'/>
+<meta name='viewport' content='user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi'/>
+
+<title>Voting Console</title>
+
+<link rel='stylesheet' type='text/css' href='/resources/CSS/resets.css'></link>
+
+<script type='text/javascript' src='/resources/scripts/classie.js'></script>
+<script type='text/javascript' src='/resources/scripts/Request.js'></script>
+<script type='text/javascript' src='/resources/scripts/Cookies.js'></script>
+
+</head>
+<body class='blue'>
+
+
+<div class='blue'>
+  <h1>Mr. AB</h1>
+  <div class='list'>
+    <div class='item closed' id='message'>Please Wait. Voting Is Closed Now.</div>
+    <div id='contestants'></div>
+  </div>
+</div>
+<div class='submitframe'>
+  <div class='submit' id='submit'>Vote</div>
+</div>
+
+<script type='text/javascript'>(function(){
+  
+  var gameid = {{identifier|safe}},
+      canvote = {{votingopen|safe}},
+      contestants = {{contestants|safe}},
+      currentround = {{round|safe}},
+      haswinner = {{haswinner}},
+      selected, voted, pollinterval;
+  
+  window.onload = Init;
+  
+  function Init(){
+    if(haswinner) return HasWinner();
+    voted = HasVoteCookie();
+    BindSubmitButton();
+    StartPoll();
+    UpdateCanVote({canvote:canvote});
+  }
+  
+  function StartPoll(){
+    pollinterval = Poll(10*1000, 'game/canvote', {
+      'identifier': gameid
+    }, UpdateCanVote);
+  }
+  function UpdateCanVote(event){
+    if(event.haswinner) return HasWinner();
+    canvote = event.canvote;
+    if(canvote){
+      if(voted){
+        document.getElementById('message').innerHTML = 'Thank You For Voting!';
+        return;
+      }
+      GenerateContestantList(function(){
+        classie.add(document.body, 'canvote');
+        classie.add(document.body, 'red');
+        classie.remove(document.body, 'blue');
+      });
+    }else{
+      voted = false;
+      document.getElementById('message').innerHTML = 'Please Wait. Voting Is Closed Now.';
+      classie.remove(document.body, 'canvote');
+      classie.remove(document.body, 'red');
+      classie.add(document.body, 'blue');
+    }
+  }
+  
+  function GenerateContestantList(callback){
+    Request('game/contestants', {
+      'identifier': gameid
+    }, OnSuccess, {default:RetryRequest});
+    function OnSuccess(event){
+      contestants = event.contestants;
+      currentround = event.round;
+      RenderContestants();
+      callback();
+    }
+  }
+  function RenderContestants(){
+    var list = document.getElementById('contestants');
+    list.innerHTML = '';
+    for(var i=0,contestant; contestant=contestants[i++];){
+      var elem = CreateElement('div', 'item', contestant);
+      elem.addEventListener('click', Click);
+      list.appendChild(elem);
+    }
+    function Click(event){
+      var elems = list.getElementsByClassName('selected');
+      if(elems.length > 0) classie.remove(elems[0], 'selected');
+      classie.add(event.target, 'selected');
+      selected = event.target.innerHTML;
+    }
+  }
+  
+  function HasWinner(){
+    clearInterval(pollinterval);
+    UpdateCanVote({canvote:false});
+    document.getElementById('message').innerHTML = 'The Competition Is Over!';
+  }
+  
+  function BindSubmitButton(){
+    var submit = document.getElementById('submit');
+    submit.removeAttribute('id');
+    
+    submit.addEventListener('touchstart', MouseDown);
+    
+    function MouseDown(){
+      classie.add(submit, 'active');
+      document.addEventListener('touchend', MouseUp);
+    }
+    function MouseUp(){
+      classie.remove(submit, 'active');
+      document.removeEventListener('touchend', MouseUp);
+      submit.innerHTML = 'working...';
+      Submit(function(){
+        submit.innerHTML = 'Vote';
+      });
+    }
+  }
+  
+  var issubmitting = false;
+  function Submit(callback){
+    if(issubmitting) return;
+    issubmitting = true;
+    Request('game/vote', {
+      'identifier': gameid,
+      'contestant': selected
+    }, OnSuccess, {101:VotingClosed, default:RetryRequest});
+    function VotingClosed(){
+      issubmitting = false;
+      UpdateCanVote({canvote:false});
+      callback();
+    }
+    function OnSuccess(){
+      issubmitting = false;
+      SetVoteCookie();
+      VotingClosed();
+      voted = true;
+      document.getElementById('message').innerHTML = 'Thank You For Voting!';
+      callback();
+    }
+  }
+  
+  function SetVoteCookie(){
+    cookies.set('v'+gameid+'i'+currentround, 'true', 1);
+  }
+  function HasVoteCookie(){
+    return !!cookies.get('v'+gameid+'i'+currentround, 'true');
+  }
+  
+  function Poll(delay, href, data, OnSuccess){
+    function RunPoll(){
+      Request(href, data, OnSuccess, {default:OnError});
+    }
+    function OnError(event){
+      event.warn('Poll Failed. Waiting for next poll.');
+    }
+    return window.setInterval(RunPoll, delay);
+  }
+  function RetryRequest(event){
+    event.error('Open Voting Failed');
+    event.retry();
+  }
+  function CreateElement(type, classes, html){
+    if(classes.constructor != Array) classes = [classes];
+    var elem = document.createElement(type);
+    for(var i=0,cls; cls=classes[i++];)
+      classie.add(elem, cls);
+    if(!!html) elem.innerHTML = html;
+    return elem;
+  }
+  
+})();</script>
+</body>
+</html>

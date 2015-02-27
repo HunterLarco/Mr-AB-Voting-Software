@@ -1,0 +1,67 @@
+<!DOCTYPE>
+<html>
+<head>
+<style type='text/css'>
+
+body{
+  padding:0px;
+  margin:0px;
+  font-family:arial;
+  font-size:20px;
+  padding:50px;
+}
+
+</style>
+<meta charset='UTF-8' NAME='Author' CONTENT='Hunter Larco'/>
+<title>Voting Console</title>
+
+<link rel='stylesheet' type='text/css' href='/resources/CSS/resets.css'></link>
+
+<script type='text/javascript' src='/resources/scripts/Request.js'></script>
+
+</head>
+<body>
+
+
+Waiting...
+
+
+<script type='text/javascript'>(function(){
+  
+  var testdate = 1418510898109, votes = 200, contestant = 'Test';
+  
+  var successes = 0, errors = 0;
+  
+  window.onload = Init;
+  
+  function Init(){
+    var interval = setInterval(function(){
+      if(testdate < Date.now()) Test();
+    }, 50);
+    function Test(){
+      clearInterval(interval);
+      for(var i=0; i<votes; i++) Vote(contestant);
+    }
+    function Vote(){
+      Request('game/vote', {
+        'identifier': {{identifier|safe}},
+        'contestant': contestant
+      }, OnSuccess, {default:OnError})
+    }
+    function OnSuccess(){
+      successes++;
+      Render();
+    }
+    function OnError(event){
+      event.error('Something Happened');
+      errors++;
+      Render();
+    }
+    function Render(){
+      document.body.innerHTML = successes+' Successes\<br/>'+errors+' Errors';
+    }
+  }
+  
+})();</script>
+</body>
+</html>

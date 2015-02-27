@@ -1,0 +1,244 @@
+<!DOCTYPE>
+<html>
+<head>
+<style type='text/css'>
+
+body{
+  padding:0px;
+  margin:0px;
+  font-family:arial;
+  font-size:15px;
+  background:rgb(230,230,230);
+  color:rgb(245,245,245);
+}
+
+.red{
+  background:rgb(203,78,78);
+}
+.darkred{
+  background:rgb(178,53,53);
+}
+.blue{
+  background:rgb(80,160,157);
+}
+.darkblue{
+  background:rgb(55,135,132);
+}
+.green{
+  background:rgb(82,200,160);
+}
+.darkgreen{
+  background:rgb(57,175,135);
+}
+
+div.round{
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 10px;
+  text-align:center;
+  font-size:20px;
+  margin:20px auto;
+  width:800px;
+}
+div.round:first-of-type{
+  margin-top:50px;
+}
+div.round:last-of-type{
+  margin-bottom:50px;
+}
+div.round div.title{
+  font-size:30px;
+  padding:10px 0px;
+}
+div.round div.detail{
+  text-align:center;
+  padding:6px 0px;
+  font-size:16px;
+}
+div.round div.detail label{
+  padding-right:30px;
+}
+div.round div.contestants{
+  padding:14px 0px;
+}
+div.round div.contestants div.contestant{
+  display:inline-block;
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 10px;
+  text-align:center;
+  font-size:20px;
+  margin:8px 8;
+  width:200px;
+}
+div.round div.contestants div.contestant.gone{
+  opacity:0.35;
+}
+div.round div.button{
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 10px;
+  text-align:center;
+  font-size:20px;
+  margin:10px auto 20px auto;
+  width:500px;
+  border-bottom:4px solid transparent;
+  cursor:pointer;
+  display:none;
+}
+div.round:first-of-type div.button{
+  display:block;
+}
+div.round.red div.button{
+  border-color:rgb(158,33,33);
+}
+div.round.blue div.button{
+  border-color:rgb(35,115,112);
+}
+div.round.green div.button{
+  border-color:rgb(37,155,115);
+}
+div.round div.button:hover{
+  border-bottom-width:3px;
+  margin-top:11px;
+}
+div.round div.button:active{
+  border-bottom-width:1px;
+  margin-top:13px;
+}
+
+a.back{
+  position:fixed;
+  top:0px;
+  left:0px;
+  padding:10px;
+  font-size:14px;
+  color:rgb(102,102,102);
+  text-decoration:none;
+}
+
+</style>
+<meta charset='UTF-8' NAME='Author' CONTENT='Hunter Larco'/>
+<title>Voting Console</title>
+
+<link rel='stylesheet' type='text/css' href='/resources/CSS/resets.css'></link>
+
+<script type='text/javascript' src='/resources/scripts/classie.js'></script>
+<script type='text/javascript' src='/resources/scripts/Request.js'></script>
+
+</head>
+<body>
+
+
+<a href='/admin/create' class='back'>Go Back</a>
+<div id='rounds'></div>
+
+
+<script type='text/javascript'>(function(){
+  
+  var roundmap = {{roundmap|safe}},
+      results = {{results|safe}},
+      totalcontestants = {{contestants|safe}},
+      currentround = {{currentround|safe}},
+      identifier = {{identifier|safe}},
+      isopen = {{isopen|safe}},
+      haswinner = {{haswinner|safe}},
+      makingrequest = false;
+  
+  window.onload = Init;
+  
+  function Init(){
+    RenderRounds();
+  }
+  
+  function RenderRounds(){
+    var list = document.getElementById('rounds');
+    list.innerHTML = '';
+    for(var i=currentround; i>=0; i--)
+      list.appendChild(GenerateRound(i));
+  }
+  function GenerateRound(index){
+    var roundnumber = index+1,
+        cont = results[index+1] || results[index],
+        start = results[index],
+        color = ['red', 'blue', 'green'][index % 3],
+        startamount = (roundmap[index-1] || totalcontestants.length);
+    var round = CreateElement('div', ['round', color]),
+        title = CreateElement('div', 'title', 'Round '+roundnumber),
+        detail = CreateElement('div', 'detail'),
+        list = CreateElement('div', 'contestants'),
+        button = CreateElement('div', ['button', 'dark'+color], isopen?'Close Voting &amp; Get Results':'Open Voting');
+    for(contestant in start){
+      var undefined;
+      var classes = cont[contestant] != undefined ? ['contestant', 'dark'+color] : ['contestant', 'dark'+color, 'gone'],
+          elem = CreateElement('div', classes, contestant);
+      list.appendChild(elem);
+    }
+    round.appendChild(title);
+    if(haswinner && index == currentround){
+      detail.appendChild(document.createTextNode(startamount+' Winner'+(startamount>1?'s':'')+'!'));
+    }else{
+      var label = CreateElement('label', [], startamount+' Start');
+      detail.appendChild(label);
+      detail.appendChild(document.createTextNode(roundmap[index]+' Continue'));
+    }
+    round.appendChild(detail);
+    round.appendChild(list);
+    if(!haswinner) round.appendChild(button);
+    if(isopen) button.addEventListener('click', function(){CloseVoting(button);});
+    else button.addEventListener('click', function(){OpenVoting(button);});
+    return round;
+  }
+  
+  function OpenVoting(button){
+    if(makingrequest) return;
+    if(isopen) return;
+    makingrequest = true;
+    isopen = true;
+    button.innerHTML = 'working...';
+    Request('admin/open', {
+      'identifier': identifier
+    }, OnSuccess, {default:RetryRequest});
+    function OnSuccess(){
+      makingrequest = false;
+      button.innerHTML = 'Close Voting &amp; Get Results';
+      button.addEventListener('click', function(){CloseVoting(button);});
+    }
+  }
+  function CloseVoting(button){
+    if(makingrequest) return;
+    if(!isopen) return;
+    isopen = false;
+    makingrequest = true;
+    button.innerHTML = 'working...';
+    Request('admin/close', {
+      'identifier': identifier
+    }, OnSuccess, {default:RetryRequest});
+    function OnSuccess(event){
+      makingrequest = false;
+      haswinner = event.haswinner;
+      currentround++;
+      results.push(event.results);
+      RenderRounds();
+    }
+  }
+  
+  function RetryRequest(event){
+    event.error('Open Voting Failed');
+    event.retry();
+  }
+  function CreateElement(type, classes, html){
+    if(classes.constructor != Array) classes = [classes];
+    var elem = document.createElement(type);
+    for(var i=0,cls; cls=classes[i++];)
+      classie.add(elem, cls);
+    if(!!html) elem.innerHTML = html;
+    return elem;
+  }
+  
+})();</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-application: votingsystem
+application: abrhs-mrab
 version: 0-0-0
 runtime: python27
 api_version: 1
@@ -13,6 +13,13 @@ handlers:
   static_dir: images
 - url: /resources
   static_dir: resources
+
+- url: /admin/?.*
+  script: admin.app
+  login: admin
+- url: /api/admin/.*
+  script: admin.app
+  login: admin
 
 - url: .*
   script: main.app

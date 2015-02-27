@@ -1,0 +1,563 @@
+<!DOCTYPE>
+<html>
+<head>
+<style type='text/css'>
+
+body{
+  padding:0px;
+  margin:0px;
+  font-family:arial;
+  font-size:15px;
+  background:rgb(230,230,230);
+}
+
+.red{
+  background:rgb(203,78,78);
+}
+.blue{
+  background:rgb(80,160,157);
+}
+.green{
+  background:rgb(82, 200, 160);
+}
+
+div.frame{
+  padding:0px 0px 50px 0px;
+}
+
+h1{
+  padding:30px 40px;
+  margin:0px;
+  font-size:40px;
+  color:rgba(255,255,255,0.65);
+  font-weight:300;
+}
+
+div.add{
+  text-align:center;
+}
+div.add input{
+  display:inline-block;
+  background:rgb(171,60,60);
+  
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  
+  -webkit-animation-duration: 0.5s; 
+  animation-duration: 0.5s; 
+  -webkit-animation-fill-mode: both; 
+  animation-fill-mode: both; 
+  
+  margin:10px auto;
+  padding:22px 40px;
+  width:500px;
+  
+  border:none;
+  outline:none;
+  
+  color:rgb(250,250,250);
+  font-size:30px;
+}
+div.add input:focus{
+  background:rgb(166,55,55);
+}
+
+::-webkit-input-placeholder{
+  color:rgba(250,250,250,.7);
+}
+:-moz-placeholder{
+  color:rgba(250,250,250,.7);
+}
+::-moz-placeholder{
+  color:rgba(250,250,250,.7);
+}
+:-ms-input-placeholder{
+  color:rgba(250,250,250,.7);
+}
+
+@-webkit-keyframes bounceIn{
+  20%{
+    -webkit-transform:scale(0.95);
+  }
+  60%{
+    -webkit-transform:scale(1.03);
+  }
+  80%{
+    -webkit-transform:scale(.97);
+  }
+  100%{
+    -webkit-transform:scale(1);
+  }
+}
+@keyframes bounceIn{
+  20%{
+    transform:scale(0.95);
+  }
+  60%{
+    transform:scale(1.03);
+  }
+  80%{
+    transform:scale(.97);
+  }
+  100%{
+    transform:scale(1);
+  }
+}
+.bounce{
+  -webkit-animation-name:bounceIn;
+  animation-name:bounceIn;
+}
+
+div.contestants{
+  width:500px;
+  margin:0px auto;
+}
+div.contestants div.contestant{
+  background:rgb(171,60,60);
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 0px;
+  text-align:center;
+  color:rgb(245,245,245);
+  font-size:20px;
+  margin:8px 0px;
+  position:relative;
+  overflow:hidden;
+}
+div.contestants div.contestant.none{
+  background:rgba(255,255,255,0.1);
+}
+div.contestants div.contestant div.delete{
+  position:absolute;
+  right:0px;
+  top:0px;
+  bottom:0px;
+  padding:0px 16px;
+  color:rgba(255,255,255,.6);
+  cursor:pointer;
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  display: -webkit-box;
+  -webkit-box-orient: horizontal;
+  -webkit-box-pack: center;
+  -webkit-box-align: center;
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  display: box;
+  box-orient: horizontal;
+  box-pack: center;
+  box-align: center;
+}
+div.contestants div.contestant div.delete:hover{
+  background:rgb(140,50,50);
+}
+
+div.rounds{
+  width:500px;
+  margin:0px auto;
+}
+div.rounds div.round{
+  text-align:center;
+  color:rgb(245,245,245);
+  font-size:20px;
+  margin:12px 0px;
+  overflow:hidden;
+}
+div.rounds div.round div.details{
+  display:inline-block;
+  background:rgb(50,130,127);
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 20px;
+  margin:0px 20px;
+}
+div.rounds div.round div.details label{
+  margin-right:45px;
+  position:relative;
+}
+div.rounds div.round div.details label:after{
+  content:'';
+  display:block;
+  width:5px;
+  height:100px;
+  background:rgb(80,160,157);
+  position:absolute;
+  left:100%;
+  top:-40px;
+  margin-left:22px;
+  -ms-transform:     rotate(35deg);
+  -webkit-transform: rotate(35deg);
+  transform:         rotate(35deg);
+}
+div.rounds div.round div.delete{
+  display:inline-block;
+  background:rgb(50,130,127);
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 16px;
+  cursor:pointer;
+  float:right;
+}
+div.rounds div.round div.delete:hover{
+  background:rgb(30,110,107);
+}
+div.rounds div.round.none div.details{
+  display:block;
+  background:rgba(255,255,255,0.1);
+  margin:0px;
+}
+
+input.addround{
+  display:inline-block;
+  background:rgb(50,130,127);
+  
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  
+  -webkit-animation-duration: 0.5s; 
+  animation-duration: 0.5s; 
+  -webkit-animation-fill-mode: both; 
+  animation-fill-mode: both; 
+  
+  margin:10px 20px;
+  padding:16px 34px;
+  width:200px;
+  
+  border:none;
+  outline:none;
+  
+  color:rgb(250,250,250);
+  font-size:22px;
+}
+input:focus{
+  background:rgb(45,125,122);
+}
+
+div.button{
+  background:rgb(62,180,140);
+  width:500px;
+  padding: 22px 0px;
+  margin:0px auto;
+  text-align:center;
+  font-size:30px;
+  color:rgba(250,250,250,.7);
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  border-bottom:4px solid rgb(42,160,120);
+  cursor:pointer;
+}
+div.button:hover{
+  border-bottom:3px solid rgb(42,160,120);
+  margin-top:1px;
+}
+div.button:active{
+  border-bottom:1px solid rgb(42,160,120);
+  margin-top:3px;
+}
+div.error{
+  background:rgba(255,255,255,0.15);
+  -webkit-border-radius: 12px;
+  -moz-border-radius:    12px;
+  border-radius:         12px;
+  padding:14px 0px;
+  text-align:center;
+  color:rgb(245,245,245);
+  font-size:20px;
+  width:500px;
+  margin:14px auto;
+  display:none;
+}
+div.error.show{
+  display:block;
+}
+
+</style>
+<meta charset='UTF-8' NAME='Author' CONTENT='Hunter Larco'/>
+<title>Voting Console</title>
+
+<link rel='stylesheet' type='text/css' href='/resources/CSS/resets.css'></link>
+
+<script type='text/javascript' src='/resources/scripts/classie.js'></script>
+<script type='text/javascript' src='/resources/scripts/Request.js'></script>
+
+</head>
+<body>
+
+
+<div class='frame red'>
+  <h1>Add Contestants</h1>
+  <div class='add'><input type='text' placeholder='Contestant Name' id='add'/></div>
+  <div class='contestants' id='contestants'>
+    <div class='contestant none'>No Contestants</div>
+  </div>
+</div>
+<div class='frame blue'>
+  <h1>Voting Structure</h1>
+  <div class='rounds'>
+    <div id='rounds'>
+      <div class='round none'><div class='details'>No Rounds</div></div>
+    </div>
+    <div class='round'>
+      Round <label id='roundcount'>1</label>
+      <input class='addround' type='text' placeholder='# Continuing' id='round'/>
+    </div>
+  </div>
+</div>
+<div class='frame green'>
+  <h1>Confirm</h1>
+  <div class='button' id='submit'>Start Competition</div>
+  <div class='error' id='submiterror'>Error</div>
+</div>
+
+
+<script type='text/javascript'>(function(){
+  
+  window.onload = Init;
+  
+  function Init(){
+    BindAddField();
+    BindRoundField();
+    BindSumbit();
+  }
+  
+  var GetContestants;
+  var OnContestantChange = new Function();
+  function BindAddField(){
+    var add = document.getElementById('add'),
+        list = document.getElementById('contestants'),
+        contestants = [];
+    add.removeAttribute('id');
+    list.removeAttribute('id');
+    
+    add.addEventListener('keydown', KeyDown);
+    
+    GetContestants = function GetContestants(){
+      return contestants;
+    }
+    
+    function KeyDown(event){
+      if(event.which != 13 || add.value.length == 0) return;
+      var value = Capitalize(add.value);
+      AddContestant(value);
+      add.value = '';
+      Bounce(add);
+    }
+    
+    function AddContestant(value){
+      if(contestants.length == 0) list.innerHTML = '';
+      
+      var div = document.createElement('div');
+      classie.add(div, 'contestant');
+      div.appendChild(document.createTextNode(value));
+      var del = document.createElement('div');
+      classie.add(del, 'delete');
+      var label = document.createElement('label');
+      label.innerHTML = 'X';
+      del.appendChild(label);
+      div.appendChild(del);
+      
+      del.addEventListener('click', function(){RemoveContestant(div, value);});
+      
+      InsertAtBeginning(list, div);
+      
+      contestants.push(value);
+      OnContestantChange(contestants);
+    }
+    
+    function RemoveContestant(div, value){
+      var index = contestants.indexOf(value);
+      if(index == -1) return;
+      contestants.splice(index, 1);
+      div.parentElement.removeChild(div);
+      if(contestants.length == 0) AddPlaceholder();
+      OnContestantChange(contestants);
+    }
+    
+    function AddPlaceholder(){
+      var div = document.createElement('div');
+      classie.add(div, 'contestant');
+      classie.add(div, 'none');
+      div.innerHTML = 'No Contestants';
+      list.appendChild(div);
+    }
+  }
+  
+  var GetRounds;
+  function BindRoundField(){
+    var input = document.getElementById('round'),
+        list = document.getElementById('rounds'),
+        label = document.getElementById('roundcount'),
+        roundmap = [];
+    input.removeAttribute('id');
+    list.removeAttribute('id');
+    label.removeAttribute('id');
+    
+    input.addEventListener('keydown', KeyDown);
+    input.addEventListener('keyup', KeyUp);
+    
+    OnContestantChange = RenderRounds;
+    
+    GetRounds = function GetRounds(){
+      return roundmap;
+    };
+    
+    function UpdateFirstRound(){
+      if(list.children.length == 0) return;
+      var elem = list.children[0];
+      elem.getElementsByClassName('details')[0].children[0].innerHTML = GetContestants().length+' Start';
+    }
+    
+    function KeyUp(){
+      var regex = /[^0-9]/g;
+      if(!input.value.match(regex)) return;
+      input.value = input.value.replace(regex,'');
+    }
+    
+    function KeyDown(event){
+      if(event.which != 13 || input.value.length == 0) return;
+      var value = parseInt(input.value);
+      AddRound(value);
+      input.value = '';
+      Bounce(input);
+    }
+    
+    function AddRound(num){
+      roundmap.push(num);
+      RenderRounds();
+    }
+    function RemoveRound(div){
+      var index = [].indexOf.call(list.children, div);
+      if(index == -1) return;
+      roundmap.splice(index, 1);
+      list.removeChild(div);
+      RenderRounds();
+    }
+    
+    function RenderRounds(){
+      list.innerHTML = '';
+      if(roundmap.length == 0) AddPlaceholder();
+      for(var i=0; i<roundmap.length; i++)
+        RenderRound(i);
+      label.innerHTML = roundmap.length+1;
+    }
+    function RenderRound(index){
+      var div = document.createElement('div');
+      classie.add(div, 'round');
+      div.appendChild(document.createTextNode('Round '+(index+1)))
+      var details = document.createElement('div');
+      classie.add(details, 'details');
+      var start = document.createElement('label');
+      start.innerHTML = (roundmap[index-1] || GetContestants().length)+' Start';
+      details.appendChild(start);
+      details.appendChild(document.createTextNode(roundmap[index]+' Continue'));
+      div.appendChild(details);
+      var del = document.createElement('div');
+      classie.add(del, 'delete');
+      var lbl = document.createElement('label');
+      lbl.innerHTML = 'X';
+      del.appendChild(lbl);
+      div.appendChild(del);
+      
+      del.addEventListener('click', function(){RemoveRound(div);});
+      list.appendChild(div);
+    }
+    
+    function AddPlaceholder(){
+      var div = document.createElement('div');
+      classie.add(div, 'round');
+      classie.add(div, 'none');
+      var details = document.createElement('div');
+      classie.add(details, 'details');
+      details.innerHTML = 'No Rounds';
+      div.appendChild(details);
+      list.appendChild(div);
+    }
+  }
+  
+  function BindSumbit(){
+    var button = document.getElementById('submit'),
+        error = document.getElementById('submiterror');
+    
+    button.removeAttribute('id');
+    error.removeAttribute('id');
+    
+    button.addEventListener('click', Submit);
+    
+    function Submit(){
+      if(!Verify()) return;
+      classie.remove(error, 'show');
+      
+      Request('admin/create', {
+        contestants: GetContestants(),
+        roundmap: GetRounds()
+      }, OnSuccess, {default: ResponseError});
+    }
+    
+    function OnSuccess(event){
+      location.href = '/admin/game/'+event.identifier;
+    }
+    
+    function ResponseError(event){
+      event.warn('Unexpected Error onSubmit');
+      ThrowError('Unexpected Error. Please Try Again');
+    }
+    function ThrowError(text){
+      error.innerHTML = text;
+      classie.add(error, 'show');
+    }
+    
+    function Verify(){
+      var rounds = GetRounds(),
+          contestants = GetContestants();
+      if(contestants.length == 0){
+        return ThrowError('Must Specify Contestants');
+      }else{
+        if(rounds.length == 0){
+          return ThrowError('Must Specify Voting Structure');
+        }else if((IsInOrder(rounds) && rounds.length != 1) || rounds[0] > contestants.length){
+          return ThrowError('Voting Structure Invalid');
+        }
+      }
+      return true;
+    }
+  }
+  
+  function Bounce(elem){
+    classie.add(elem, 'bounce');
+    setTimeout(function(){
+      classie.remove(elem, 'bounce');
+    }, 550);
+  }
+  function InsertAtBeginning(frame, child){
+    if(frame.children.length == 0) frame.appendChild(child);
+    else frame.insertBefore(child, frame.children[0]);
+  }
+  function Capitalize(name){
+    var letters = name.toLowerCase().split(''),
+        upper = true,
+        output = '';
+    for(var i=0,letter; letter=letters[i++];){
+      output += upper ? letter.toUpperCase() : letter;
+      upper = !letter.match(/[a-z]/);
+    }
+    return output;
+  }
+  function IsInOrder(array){
+    for(var i=0; i<array.length-1; i++)
+      if(array[i] > array[i+1])
+        return false;
+    return true;
+  }
+  
+})();</script>
+</body>
+</html>
